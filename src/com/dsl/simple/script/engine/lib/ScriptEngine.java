@@ -15,6 +15,7 @@ import static com.dsl.simple.script.engine.Operator.*;
 
 public class ScriptEngine
 {
+    private static final String OPERATOR_REGEX = "[+*-/=]";
     private static Map<String, String> data;
 
     private ScriptEngine() {}
@@ -37,7 +38,7 @@ public class ScriptEngine
         int index = 0;
         for(String expressionValue : expressionValues)
         {
-            long count = Stream.of(expressionValues).filter(s -> s.matches("[+]")).count();
+            long count = Stream.of(expressionValues).filter(s -> s.matches(OPERATOR_REGEX)).count();
             Operator operator = Operator.parse(expressionValue);
             if(Objects.nonNull(operator))
             {
@@ -56,7 +57,8 @@ public class ScriptEngine
                 }
                 else if(operator.equals(DIVISION))
                 {
-                    total /= (total == 0 ? Integer.parseInt(expressionValues[index - 1]) / Integer.parseInt(expressionValues[index + 1]) : Integer.parseInt(expressionValues[index + 1])) ;
+                    if(total == 0) total = 1;
+                    total /= (total == 1 ? Integer.parseInt(expressionValues[index - 1]) / Integer.parseInt(expressionValues[index + 1]) : Integer.parseInt(expressionValues[index + 1])) ;
                 }
                 else if(operator.equals(EQUAL))
                 {
@@ -92,6 +94,6 @@ public class ScriptEngine
 
     private static List<String> getParameters(String script)
     {
-        return Stream.of(script.split("[+*-/=]")).map(String::trim).filter(s -> s.startsWith("${")).collect(Collectors.toList());
+        return Stream.of(script.split(OPERATOR_REGEX)).map(String::trim).filter(s -> s.startsWith("${")).collect(Collectors.toList());
     }
 }
