@@ -1,3 +1,8 @@
+/*
+ * Author Steven Yeoh
+ * Copyright (c) 2019. All rights reserved
+ */
+
 package com.dsl.simple.script.engine.lib;
 
 import com.dsl.simple.script.engine.Operator;
