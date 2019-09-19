@@ -11,8 +11,8 @@ Overview
 
 Sample
 --
-1. `${PARAM_1} + ${PARAM_2} == ${PARAM_3}"`
+1. `"${PARAM_1} + ${PARAM_2} == ${PARAM_3}"`
 2. `"${PARAM_4} == 20", "${PARAM_3} == 10"`
-3. `${PARAM_5} == "`
+3. `"${PARAM_5} == "`
 4. `"${PARAM_1} + ${PARAM_2} + ${PARAM_3} == 20"`
-5. `${PARAM_1} * ${PARAM_2} + ${PARAM_3} + ${PARAM_4} / ${PARAM_1} == 11")`
+5. `"${PARAM_1} * ${PARAM_2} + ${PARAM_3} + ${PARAM_4} / ${PARAM_1} == 11"`
