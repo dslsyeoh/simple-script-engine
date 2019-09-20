@@ -5,6 +5,7 @@
 
 package com.dsl.simple.script.engine.lib;
 
+import com.dsl.simple.script.engine.constants.Operator;
 import com.dsl.simple.script.engine.utils.Convert;
 
 import java.util.*;
@@ -12,11 +13,14 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static com.dsl.simple.script.engine.constants.Operator.*;
+
 public class ScriptEngineV2
 {
-    private static final String OPERATOR_REGEX = "[+-/*]";
-    private static final String EXPRESSION_REGEX = "[+-/<>=*]";
+    private static final String MATH_REGEX = "[+-/*]";
+    private static final String OPERATOR_REGEX = "[!+-/<>=*]";
     private static Map<String, String> data;
+    private static Map<String, String> map = new HashMap<>();
 
     private ScriptEngineV2() {}
 
@@ -25,13 +29,12 @@ public class ScriptEngineV2
         ScriptEngineV2.data = data;
     }
 
-    public static void eval(String script)
+    public static boolean eval(String script)
     {
-        Map<String, String> map = new HashMap<>();
         String formalizedScript = formalizeScript(script);
         String trimmedFormalizedScript = Arrays.stream(formalizedScript.split("")).filter(value -> !value.matches("[\\s]")).collect(Collectors.joining());
         List<String> values = Arrays.stream(trimmedFormalizedScript.split("")).collect(Collectors.toList());
-        long count = values.stream().filter(value -> value.matches(OPERATOR_REGEX)).count();
+        long count = values.stream().filter(value -> value.matches(MATH_REGEX)).count();
         int index = findIndex(0, values);
 
         for(int i = 0; i < count; i++)
@@ -47,34 +50,33 @@ public class ScriptEngineV2
             }
         }
 
-        if(trimmedFormalizedScript.indexOf('=') != -1 && Objects.equals(values.get(trimmedFormalizedScript.indexOf('=') + 1), "="))
+        return eval(trimmedFormalizedScript, getEvaluatedResult(count), getExpression(trimmedFormalizedScript, values));
+    }
+
+    private static String getEvaluatedResult(long count)
+    {
+        return map.get(String.valueOf(count - 1));
+    }
+
+    private static boolean eval(String script, String evaluatedResult, Operator operator)
+    {
+        if(Objects.nonNull(operator))
         {
-            System.out.println(Objects.equals(trimmedFormalizedScript.substring(trimmedFormalizedScript.lastIndexOf('=') + 1), map.get(String.valueOf(count - 1))));
-        }
-        else if(trimmedFormalizedScript.indexOf('<') != -1)
-        {
-            int evaluatedValue = Convert.toPrimitiveInt(map.get(String.valueOf(count - 1)));
-            if(Objects.equals(values.get(trimmedFormalizedScript.indexOf('<') + 1), "="))
+            switch (operator)
             {
-                System.out.println(Convert.toPrimitiveInt(trimmedFormalizedScript.substring(trimmedFormalizedScript.lastIndexOf('=') + 1)) <= evaluatedValue);
-            }
-            else
-            {
-                System.out.println(Convert.toPrimitiveInt(trimmedFormalizedScript.substring(trimmedFormalizedScript.lastIndexOf('<') + 1)) < evaluatedValue);
-            }
-        }
-        else if(trimmedFormalizedScript.indexOf('>') != -1)
-        {
-            int evaluatedValue = Convert.toPrimitiveInt(map.get(String.valueOf(count - 1)));
-            if(Objects.equals(values.get(trimmedFormalizedScript.indexOf('>') + 1), "="))
-            {
-                System.out.println(Convert.toPrimitiveInt(trimmedFormalizedScript.substring(trimmedFormalizedScript.lastIndexOf('=') + 1)) >= evaluatedValue);
-            }
-            else
-            {
-                System.out.println(Convert.toPrimitiveInt(trimmedFormalizedScript.substring(trimmedFormalizedScript.lastIndexOf('>') + 1)) > evaluatedValue);
+                case EQUAL:
+                    return Objects.equals(script.substring(script.lastIndexOf('=') + 1), evaluatedResult);
+                case LESS_THAN:
+                    return Convert.toPrimitiveInt(script.substring(script.lastIndexOf('<') + 1)) < Convert.toPrimitiveInt(evaluatedResult);
+                case NOT_MORE_THAN:
+                    return Convert.toPrimitiveInt(script.substring(script.lastIndexOf('=') + 1)) <= Convert.toPrimitiveInt(evaluatedResult);
+                case MORE_THAN:
+                    return Convert.toPrimitiveInt(script.substring(script.lastIndexOf('>') + 1)) > Convert.toPrimitiveInt(evaluatedResult);
+                case NOT_LESS_THAN:
+                    return Convert.toPrimitiveInt(script.substring(script.lastIndexOf('=') + 1)) >= Convert.toPrimitiveInt(evaluatedResult);
             }
         }
+        return true;
     }
 
     private static String formalizeScript(String script)
@@ -97,7 +99,7 @@ public class ScriptEngineV2
 
     private static List<String> getParameters(String script)
     {
-        return Stream.of(script.split(EXPRESSION_REGEX)).map(String::trim).filter(s -> s.startsWith("${")).collect(Collectors.toList());
+        return Stream.of(script.split(OPERATOR_REGEX)).map(String::trim).filter(s -> s.startsWith("${")).collect(Collectors.toList());
     }
 
     private static String calculate(String first, String second, String operator)
@@ -116,7 +118,27 @@ public class ScriptEngineV2
 
     private static int findIndex(int start, List<String> values)
     {
-        return IntStream.range(start, values.size()).filter(index -> values.get(index).matches(OPERATOR_REGEX)).findFirst().orElse(-1);
+        return IntStream.range(start, values.size()).filter(index -> values.get(index).matches(MATH_REGEX)).findFirst().orElse(-1);
     }
 
+    private static Operator getExpression(String trimmedFormalizedScript, List<String> values)
+    {
+        int lt = trimmedFormalizedScript.indexOf('<');
+        int gt = trimmedFormalizedScript.indexOf('>');
+        int equal = trimmedFormalizedScript.lastIndexOf('=');
+
+        if(lt != -1)
+        {
+            return Objects.equals(values.get(lt + 1), "=") ? NOT_MORE_THAN : LESS_THAN;
+        }
+        else if(gt != -1)
+        {
+            return Objects.equals(values.get(gt + 1), "=") ? NOT_LESS_THAN : MORE_THAN;
+        }
+        else if(equal != -1)
+        {
+            return Objects.equals(values.get(equal - 1), "!") ? NOT_EQUAL : EQUAL;
+        }
+        return null;
+    }
 }
