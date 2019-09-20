@@ -5,9 +5,8 @@ Overview
 -- 
 1. Does not support `complicated` script
 2. Supported `operators` are `ADDITION`, `SUBTRACTION`, `MULTIPLICATION`, `DIVISION` and `EQUAL`.
-3. Accept `list` only.
-4. `script` format must be in `${`key`}` `operator` `${`key`}` and so on.
-5. `Compare` `empty` string in refer to `no.3` in **Sample** section.
+3. `script` format must be in `${`key`}` `operator` `${`key`}` and so on.
+4. `Compare` `empty` string in refer to `no.3` in **Sample** section.
 
 Sample
 --
