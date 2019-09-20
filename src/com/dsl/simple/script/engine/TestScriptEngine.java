@@ -29,10 +29,11 @@ public class TestScriptEngine
 //        System.out.println(scripts.stream().allMatch(ScriptEngine::eval));
 
         ScriptEngineV2.init(dataStorage.getData());
-        ScriptEngineV2.eval("${PARAM_1} + ${PARAM_2} == ${PARAM_3}");
-        ScriptEngineV2.eval("${PARAM_1} + ${PARAM_2} <= ${PARAM_3}");
-        ScriptEngineV2.eval("${PARAM_1} + ${PARAM_2} < ${PARAM_3}");
-        ScriptEngineV2.eval("${PARAM_1} + ${PARAM_2} >= ${PARAM_3}");
-        ScriptEngineV2.eval("${PARAM_1} + ${PARAM_2} > ${PARAM_3}");
+        System.out.println(ScriptEngineV2.eval("${PARAM_1} + ${PARAM_2} == ${PARAM_3}"));
+        System.out.println(ScriptEngineV2.eval("${PARAM_1} + ${PARAM_2} <= ${PARAM_3}"));
+        System.out.println(ScriptEngineV2.eval("${PARAM_1} + ${PARAM_2} < ${PARAM_3}"));
+        System.out.println(ScriptEngineV2.eval("${PARAM_1} + ${PARAM_2} >= ${PARAM_3}"));
+        System.out.println(ScriptEngineV2.eval("${PARAM_1} + ${PARAM_2} > ${PARAM_3}"));
+        System.out.println(ScriptEngineV2.eval("${PARAM_1} + ${PARAM_2} != ${PARAM_4}"));
     }
 }
