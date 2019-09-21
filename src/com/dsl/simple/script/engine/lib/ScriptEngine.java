@@ -44,12 +44,12 @@ public class ScriptEngine implements ScriptEngineManager
         {
             if(i == 0)
             {
-                evalMap.put(String.valueOf(i), calculate(values.get(index - 1), scriptValues.get(index), getMathOperator(values.get(index))));
+                evalMap.put(String.valueOf(i), calculate(values.get(index - 1), scriptValues.get(index), getOperation(values.get(index))));
             }
             else
             {
                 index = findIndex(index + 1, values);
-                evalMap.put(String.valueOf(i), calculate(evalMap.get(String.valueOf(i - 1)), scriptValues.get(i + 1), getMathOperator(values.get(index))));
+                evalMap.put(String.valueOf(i), calculate(evalMap.get(String.valueOf(i - 1)), scriptValues.get(i + 1), getOperation(values.get(index))));
             }
         }
 
@@ -112,9 +112,9 @@ public class ScriptEngine implements ScriptEngineManager
         return Stream.of(script.split(OPERATOR_REGEX)).map(String::trim).filter(s -> s.startsWith("${")).collect(Collectors.toList());
     }
 
-    private String calculate(String first, String second, Operation mathOperator)
+    private String calculate(String first, String second, Operation operation)
     {
-        switch (mathOperator)
+        switch (operation)
         {
             case ADDITION:
                 return String.valueOf(toPrimitiveInt(first) + toPrimitiveInt(second));
@@ -124,8 +124,9 @@ public class ScriptEngine implements ScriptEngineManager
                 return String.valueOf(toPrimitiveInt(first) * toPrimitiveInt(second));
             case DIVISION:
                 return String.valueOf(toPrimitiveInt(first) / toPrimitiveInt(second));
+            default:
+                return "";
         }
-        return "";
     }
 
     private int findIndex(int start, List<String> values)
@@ -133,7 +134,7 @@ public class ScriptEngine implements ScriptEngineManager
         return IntStream.range(start, values.size()).filter(index -> values.get(index).matches(OPERATION_REGEX)).findFirst().orElse(-1);
     }
 
-    private Operation getMathOperator(String value)
+    private Operation getOperation(String value)
     {
         return Operation.parse(value);
     }
