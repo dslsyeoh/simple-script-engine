@@ -16,21 +16,21 @@ import java.util.stream.Stream;
 import static com.dsl.simple.script.engine.constants.Operator.*;
 import static com.dsl.simple.script.engine.utils.Convert.toPrimitiveInt;
 
-public class ScriptEngine
+public class ScriptEngine implements ScriptEngineManager
 {
     private static final String BASIC_MATH_OPERATOR_REGEX = "[+-/*]";
     private static final String OPERATOR_REGEX = "[!+-/<>=*]";
-    private static Map<String, String> data;
-    private static Map<String, String> map;
+    private Map<String, String> data;
+    private Map<String, String> map;
 
-    private ScriptEngine() {}
-
-    public static void init(Map<String, String> data)
+    @Override
+    public void init(Map<String, String> data)
     {
-        ScriptEngine.data = data;
+        this.data = data;
     }
 
-    public static boolean eval(String script)
+    @Override
+    public boolean eval(String script)
     {
         map = new HashMap<>();
         String formalizedScript = formalizeScript(script);
@@ -61,12 +61,12 @@ public class ScriptEngine
         return eval(trimmedFormalizedScript, getEvaluatedResult(count), getOperator(trimmedFormalizedScript, values));
     }
 
-    private static String getEvaluatedResult(long count)
+    private String getEvaluatedResult(long count)
     {
         return count == 0 ? map.get(String.valueOf(count)) : map.get(String.valueOf(count - 1));
     }
 
-    private static boolean eval(String script, String evaluatedResult, Operator operator)
+    private boolean eval(String script, String evaluatedResult, Operator operator)
     {
         if(Objects.nonNull(operator))
         {
@@ -89,12 +89,12 @@ public class ScriptEngine
         return true;
     }
 
-    private static String formalizeScript(String script)
+    private String formalizeScript(String script)
     {
         return formalizeScript(script, getParameters(script));
     }
 
-    private static String formalizeScript(String script, List<String> parameters)
+    private String formalizeScript(String script, List<String> parameters)
     {
         String formalizedScript = script;
 
@@ -107,12 +107,12 @@ public class ScriptEngine
         return formalizedScript;
     }
 
-    private static List<String> getParameters(String script)
+    private List<String> getParameters(String script)
     {
         return Stream.of(script.split(OPERATOR_REGEX)).map(String::trim).filter(s -> s.startsWith("${")).collect(Collectors.toList());
     }
 
-    private static String calculate(String first, String second, MathOperator mathOperator)
+    private String calculate(String first, String second, MathOperator mathOperator)
     {
         switch (mathOperator)
         {
@@ -128,17 +128,17 @@ public class ScriptEngine
         return "";
     }
 
-    private static int findIndex(int start, List<String> values)
+    private int findIndex(int start, List<String> values)
     {
         return IntStream.range(start, values.size()).filter(index -> values.get(index).matches(BASIC_MATH_OPERATOR_REGEX)).findFirst().orElse(-1);
     }
 
-    private static MathOperator getMathOperator(String value)
+    private MathOperator getMathOperator(String value)
     {
         return MathOperator.parse(value);
     }
 
-    private static Operator getOperator(String trimmedFormalizedScript, List<String> values)
+    private Operator getOperator(String trimmedFormalizedScript, List<String> values)
     {
         int lt = trimmedFormalizedScript.indexOf('<');
         int gt = trimmedFormalizedScript.indexOf('>');
