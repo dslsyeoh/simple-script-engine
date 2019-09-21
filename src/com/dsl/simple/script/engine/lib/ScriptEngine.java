@@ -5,7 +5,7 @@
 
 package com.dsl.simple.script.engine.lib;
 
-import com.dsl.simple.script.engine.constants.MathOperator;
+import com.dsl.simple.script.engine.constants.Operation;
 import com.dsl.simple.script.engine.constants.Operator;
 
 import java.util.*;
@@ -18,10 +18,10 @@ import static com.dsl.simple.script.engine.utils.Convert.toPrimitiveInt;
 
 public class ScriptEngine implements ScriptEngineManager
 {
-    private static final String BASIC_MATH_OPERATOR_REGEX = "[+-/*]";
+    private static final String OPERATION_REGEX = "[+-/*]";
     private static final String OPERATOR_REGEX = "[!+-/<>=*]";
     private Map<String, String> data;
-    private Map<String, String> map;
+    private Map<String, String> evalMap;
 
     @Override
     public void init(Map<String, String> data)
@@ -32,24 +32,24 @@ public class ScriptEngine implements ScriptEngineManager
     @Override
     public boolean eval(String script)
     {
-        map = new HashMap<>();
+        evalMap = new HashMap<>();
         String formalizedScript = formalizeScript(script);
         String trimmedFormalizedScript = Arrays.stream(formalizedScript.split("")).filter(value -> !value.matches("[\\s]")).collect(Collectors.joining());
         List<String> values = Arrays.stream(trimmedFormalizedScript.split("")).collect(Collectors.toList());
         List<String> scriptValues = Arrays.stream(trimmedFormalizedScript.split(OPERATOR_REGEX)).filter(s -> !s.isEmpty()).collect(Collectors.toList());
-        long count = values.stream().filter(value -> value.matches(BASIC_MATH_OPERATOR_REGEX)).count();
+        long count = values.stream().filter(value -> value.matches(OPERATION_REGEX)).count();
         int index = findIndex(0, values);
 
         for(int i = 0; i < count; i++)
         {
             if(i == 0)
             {
-                map.put(String.valueOf(i), calculate(values.get(index - 1), scriptValues.get(index), getMathOperator(values.get(index))));
+                evalMap.put(String.valueOf(i), calculate(values.get(index - 1), scriptValues.get(index), getMathOperator(values.get(index))));
             }
             else
             {
                 index = findIndex(index + 1, values);
-                map.put(String.valueOf(i), calculate(map.get(String.valueOf(i - 1)), scriptValues.get(i + 1), getMathOperator(values.get(index))));
+                evalMap.put(String.valueOf(i), calculate(evalMap.get(String.valueOf(i - 1)), scriptValues.get(i + 1), getMathOperator(values.get(index))));
             }
         }
 
@@ -63,7 +63,7 @@ public class ScriptEngine implements ScriptEngineManager
 
     private String getEvaluatedResult(long count)
     {
-        return count == 0 ? map.get(String.valueOf(count)) : map.get(String.valueOf(count - 1));
+        return count == 0 ? evalMap.get(String.valueOf(count)) : evalMap.get(String.valueOf(count - 1));
     }
 
     private boolean eval(String script, String evaluatedResult, Operator operator)
@@ -112,7 +112,7 @@ public class ScriptEngine implements ScriptEngineManager
         return Stream.of(script.split(OPERATOR_REGEX)).map(String::trim).filter(s -> s.startsWith("${")).collect(Collectors.toList());
     }
 
-    private String calculate(String first, String second, MathOperator mathOperator)
+    private String calculate(String first, String second, Operation mathOperator)
     {
         switch (mathOperator)
         {
@@ -130,12 +130,12 @@ public class ScriptEngine implements ScriptEngineManager
 
     private int findIndex(int start, List<String> values)
     {
-        return IntStream.range(start, values.size()).filter(index -> values.get(index).matches(BASIC_MATH_OPERATOR_REGEX)).findFirst().orElse(-1);
+        return IntStream.range(start, values.size()).filter(index -> values.get(index).matches(OPERATION_REGEX)).findFirst().orElse(-1);
     }
 
-    private MathOperator getMathOperator(String value)
+    private Operation getMathOperator(String value)
     {
-        return MathOperator.parse(value);
+        return Operation.parse(value);
     }
 
     private Operator getOperator(String trimmedFormalizedScript, List<String> values)

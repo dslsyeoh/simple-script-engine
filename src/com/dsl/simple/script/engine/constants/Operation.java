@@ -8,7 +8,7 @@ package com.dsl.simple.script.engine.constants;
 import java.util.Arrays;
 import java.util.Objects;
 
-public enum MathOperator
+public enum Operation
 {
     ADDITION("+"),
     SUBTRACTION("-"),
@@ -17,12 +17,12 @@ public enum MathOperator
 
     private String symbol;
 
-    MathOperator(String symbol)
+    Operation(String symbol)
     {
         this.symbol = symbol;
     }
 
-    public static MathOperator parse(String value)
+    public static Operation parse(String value)
     {
         return Arrays.stream(values()).filter(mathOperator -> Objects.equals(mathOperator.symbol, value)).findFirst().orElse(null);
     }
