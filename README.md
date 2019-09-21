@@ -3,7 +3,7 @@ Simple Script Engine
 
 Overview
 - 
-1. Supported 6 types of `operator` list belows
+1. Supported 6 types of `operator` listed belows
     - `EQUAL`
     - `NOT_EQUAL`
     - `LESS_THAN`
@@ -11,7 +11,12 @@ Overview
     - `MORE_THAN`
     - `NOT_LESS_THAN`
 2. `script` format must be in `${`key`}` `operator` `${`key`}` and so on.
-3. `Compare` `empty` string in refer to `no.3` in **Sample** section.
+3. Supported basic `operation` listed belows
+    - `ADDITION`
+    - `SUBTRACTION`
+    - `MULTIPLICATION`
+    - `DIVISION`
+4. `Compare` `empty` string in refer to `no.3` in **Sample** section.
 
 Sample
 -
