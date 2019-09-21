@@ -73,15 +73,15 @@ public class ScriptEngine implements ScriptEngineManager
             switch (operator)
             {
                 case EQUAL:
-                    return Objects.equals(getSubStringAfter(script, '='), evaluatedResult);
+                    return Objects.equals(getSubstringAfter(script, '='), evaluatedResult);
                 case LESS_THAN:
-                    return toPrimitiveInt(getSubStringAfter(script, '<')) < toPrimitiveInt(evaluatedResult);
+                    return toPrimitiveInt(getSubstringAfter(script, '<')) < toPrimitiveInt(evaluatedResult);
                 case NOT_MORE_THAN:
-                    return toPrimitiveInt(getSubStringAfter(script, '=')) <= toPrimitiveInt(evaluatedResult);
+                    return toPrimitiveInt(getSubstringAfter(script, '=')) <= toPrimitiveInt(evaluatedResult);
                 case MORE_THAN:
-                    return toPrimitiveInt(getSubStringAfter(script, '>')) > toPrimitiveInt(evaluatedResult);
+                    return toPrimitiveInt(getSubstringAfter(script, '>')) > toPrimitiveInt(evaluatedResult);
                 case NOT_LESS_THAN:
-                    return toPrimitiveInt(getSubStringAfter(script, '=')) >= toPrimitiveInt(evaluatedResult);
+                    return toPrimitiveInt(getSubstringAfter(script, '=')) >= toPrimitiveInt(evaluatedResult);
                 default:
                     return true;
             }
@@ -160,7 +160,7 @@ public class ScriptEngine implements ScriptEngineManager
         return null;
     }
 
-    private static String getSubStringAfter(String script, char ch)
+    private static String getSubstringAfter(String script, char ch)
     {
         return script.substring(script.lastIndexOf(ch) + 1);
     }
