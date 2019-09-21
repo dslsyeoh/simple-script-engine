@@ -5,8 +5,8 @@
 
 package com.dsl.simple.script.engine.lib;
 
+import com.dsl.simple.script.engine.constants.MathOperator;
 import com.dsl.simple.script.engine.constants.Operator;
-import com.dsl.simple.script.engine.utils.Convert;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -14,48 +14,56 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static com.dsl.simple.script.engine.constants.Operator.*;
+import static com.dsl.simple.script.engine.utils.Convert.toPrimitiveInt;
 
-public class ScriptEngineV2
+public class ScriptEngine
 {
-    private static final String MATH_REGEX = "[+-/*]";
+    private static final String BASIC_MATH_OPERATOR_REGEX = "[+-/*]";
     private static final String OPERATOR_REGEX = "[!+-/<>=*]";
     private static Map<String, String> data;
-    private static Map<String, String> map = new HashMap<>();
+    private static Map<String, String> map;
 
-    private ScriptEngineV2() {}
+    private ScriptEngine() {}
 
     public static void init(Map<String, String> data)
     {
-        ScriptEngineV2.data = data;
+        ScriptEngine.data = data;
     }
 
     public static boolean eval(String script)
     {
+        map = new HashMap<>();
         String formalizedScript = formalizeScript(script);
         String trimmedFormalizedScript = Arrays.stream(formalizedScript.split("")).filter(value -> !value.matches("[\\s]")).collect(Collectors.joining());
         List<String> values = Arrays.stream(trimmedFormalizedScript.split("")).collect(Collectors.toList());
-        long count = values.stream().filter(value -> value.matches(MATH_REGEX)).count();
+        List<String> scriptValues = Arrays.stream(trimmedFormalizedScript.split(OPERATOR_REGEX)).filter(s -> !s.isEmpty()).collect(Collectors.toList());
+        long count = values.stream().filter(value -> value.matches(BASIC_MATH_OPERATOR_REGEX)).count();
         int index = findIndex(0, values);
 
         for(int i = 0; i < count; i++)
         {
             if(i == 0)
             {
-                map.put(String.valueOf(i), calculate(values.get(index - 1), values.get(index + 1), values.get(index)));
+                map.put(String.valueOf(i), calculate(values.get(index - 1), scriptValues.get(index), getMathOperator(values.get(index))));
             }
             else
             {
                 index = findIndex(index + 1, values);
-                map.put(String.valueOf(i), calculate(map.get(String.valueOf(i - 1)), values.get(index + 1), values.get(index)));
+                map.put(String.valueOf(i), calculate(map.get(String.valueOf(i - 1)), scriptValues.get(i + 1), getMathOperator(values.get(index))));
             }
         }
 
-        return eval(trimmedFormalizedScript, getEvaluatedResult(count), getExpression(trimmedFormalizedScript, values));
+        if(count == 0)
+        {
+            String value = trimmedFormalizedScript.substring(0, trimmedFormalizedScript.indexOf('='));
+            return eval(trimmedFormalizedScript, value, getOperator(trimmedFormalizedScript, values));
+        }
+        return eval(trimmedFormalizedScript, getEvaluatedResult(count), getOperator(trimmedFormalizedScript, values));
     }
 
     private static String getEvaluatedResult(long count)
     {
-        return map.get(String.valueOf(count - 1));
+        return count == 0 ? map.get(String.valueOf(count)) : map.get(String.valueOf(count - 1));
     }
 
     private static boolean eval(String script, String evaluatedResult, Operator operator)
@@ -65,15 +73,17 @@ public class ScriptEngineV2
             switch (operator)
             {
                 case EQUAL:
-                    return Objects.equals(script.substring(script.lastIndexOf('=') + 1), evaluatedResult);
+                    return Objects.equals(getSubStringAfter(script, '='), evaluatedResult);
                 case LESS_THAN:
-                    return Convert.toPrimitiveInt(script.substring(script.lastIndexOf('<') + 1)) < Convert.toPrimitiveInt(evaluatedResult);
+                    return toPrimitiveInt(getSubStringAfter(script, '<')) < toPrimitiveInt(evaluatedResult);
                 case NOT_MORE_THAN:
-                    return Convert.toPrimitiveInt(script.substring(script.lastIndexOf('=') + 1)) <= Convert.toPrimitiveInt(evaluatedResult);
+                    return toPrimitiveInt(getSubStringAfter(script, '=')) <= toPrimitiveInt(evaluatedResult);
                 case MORE_THAN:
-                    return Convert.toPrimitiveInt(script.substring(script.lastIndexOf('>') + 1)) > Convert.toPrimitiveInt(evaluatedResult);
+                    return toPrimitiveInt(getSubStringAfter(script, '>')) > toPrimitiveInt(evaluatedResult);
                 case NOT_LESS_THAN:
-                    return Convert.toPrimitiveInt(script.substring(script.lastIndexOf('=') + 1)) >= Convert.toPrimitiveInt(evaluatedResult);
+                    return toPrimitiveInt(getSubStringAfter(script, '=')) >= toPrimitiveInt(evaluatedResult);
+                default:
+                    return true;
             }
         }
         return true;
@@ -102,26 +112,33 @@ public class ScriptEngineV2
         return Stream.of(script.split(OPERATOR_REGEX)).map(String::trim).filter(s -> s.startsWith("${")).collect(Collectors.toList());
     }
 
-    private static String calculate(String first, String second, String operator)
+    private static String calculate(String first, String second, MathOperator mathOperator)
     {
-        if(Objects.equals(operator, "+"))
+        switch (mathOperator)
         {
-            return String.valueOf(Convert.toPrimitiveInt(first) + Convert.toPrimitiveInt(second));
+            case ADDITION:
+                return String.valueOf(toPrimitiveInt(first) + toPrimitiveInt(second));
+            case SUBTRACTION:
+                return String.valueOf(toPrimitiveInt(first) - toPrimitiveInt(second));
+            case MULTIPLICATION:
+                return String.valueOf(toPrimitiveInt(first) * toPrimitiveInt(second));
+            case DIVISION:
+                return String.valueOf(toPrimitiveInt(first) / toPrimitiveInt(second));
         }
-        else if(Objects.equals(operator, "*"))
-        {
-            return String.valueOf(Convert.toPrimitiveInt(first) * Convert.toPrimitiveInt(second));
-        }
-
         return "";
     }
 
     private static int findIndex(int start, List<String> values)
     {
-        return IntStream.range(start, values.size()).filter(index -> values.get(index).matches(MATH_REGEX)).findFirst().orElse(-1);
+        return IntStream.range(start, values.size()).filter(index -> values.get(index).matches(BASIC_MATH_OPERATOR_REGEX)).findFirst().orElse(-1);
     }
 
-    private static Operator getExpression(String trimmedFormalizedScript, List<String> values)
+    private static MathOperator getMathOperator(String value)
+    {
+        return MathOperator.parse(value);
+    }
+
+    private static Operator getOperator(String trimmedFormalizedScript, List<String> values)
     {
         int lt = trimmedFormalizedScript.indexOf('<');
         int gt = trimmedFormalizedScript.indexOf('>');
@@ -140,5 +157,10 @@ public class ScriptEngineV2
             return Objects.equals(values.get(equal - 1), "!") ? NOT_EQUAL : EQUAL;
         }
         return null;
+    }
+
+    private static String getSubStringAfter(String script, char ch)
+    {
+        return script.substring(script.lastIndexOf(ch) + 1);
     }
 }
